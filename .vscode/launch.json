@@ -18,6 +18,7 @@
                 "interface/stlink.cfg",
                 "target/stm32f3x.cfg"
             ],
+            "svdFile": "${workspaceRoot}/STM32F303.svd",
         }
     ]
 }

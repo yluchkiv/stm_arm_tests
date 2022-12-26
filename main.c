@@ -4,6 +4,8 @@ int i;
 
 void gpioSet(void);
 
+void buttonPin(void);
+
 void ledToggle(void);
 void myDelay(void);
 
@@ -11,12 +13,18 @@ int main()
 {
     // we need to turn on the clock on specifig periferial register
     gpioSet();
+    
 
 
 
     while(1)
     {
+        
+        
+        buttonPin();
         ledToggle();
+
+
         myDelay();
 
     }
@@ -48,4 +56,13 @@ void myDelay(void)
     {
 
     }
+}
+
+void buttonPin(void)
+{
+    // PC9 as an input button, pull-up tha will be grounded by external button
+
+    // no need to start RCC for AHBENR as it is already strated
+    // begin with MODER = 00 for Input
+    GPIOC -> PUPDR |= GPIO_PUPDR_PUPDR9_0;
 }
