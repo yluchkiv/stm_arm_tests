@@ -1,1 +1,1 @@
-[{"node":"GPIOC","expanded":true,"format":0,"pinned":false},{"node":"GPIOC.AFRL","expanded":true,"format":0},{"node":"TIM3","expanded":true,"format":0,"pinned":false}]
+[{"node":"RCC","expanded":true,"format":0,"pinned":false},{"node":"RCC.CFGR","expanded":true,"format":0},{"node":"TIM3","expanded":true,"format":0,"pinned":false},{"node":"TIM3.CNT","expanded":true,"format":0}]

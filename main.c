@@ -3,18 +3,12 @@
 
 int i;
 
-void gpioSet(void);
-void buttonPin(void);
-void ledToggle(void);
-void myDelay(void);
-void ledBright(void);
-void ledDark(void);
+static void clock_init(void);
 
 int main()
 {
     // we need to turn on the clock on specifig periferial register
-    gpioSet();
-    buttonPin();
+    clock_init();
 
     rcc_setup();
     pwm_ch_setup();
@@ -22,68 +16,52 @@ int main()
 
     while(1)
     {
-       
-       
-       
-
-
-        if(GPIOC -> IDR & GPIO_IDR_9) //GPIO_IDR_9 = 0x00000200U // NOT PRESSED
-        {
-            ledDark();
-        }
-        else if (!(GPIOC -> IDR & GPIO_IDR_9))   // PRESSED
-        {
-
-            //ledToggle();
-            //myDelay();
-            ledBright();
-
-        }
-        else // ERROR
-        {
-
-        }
 
     }
     return 0;
 }
 
-void gpioSet(void)
+static void clock_init(void)
 {
-    // output on pin PC6 (FT-5v tolerant)
-    RCC -> AHBENR |= RCC_AHBENR_GPIOCEN; // enable AHBENR per. where PC6 located
-    __IO uint32_t tmpreg = RCC -> AHBENR & (~RCC_AHBENR_GPIOCEN);
-    (void)tmpreg;
-    GPIOC -> MODER |= GPIO_MODER_MODER6_0; // gen.purp output mode 01
-}
+	RCC->CR   |= RCC_CR_HSEON; 				// set HSE ON for external oscilator 8 MHz
+	while((RCC->CR & RCC_CR_HSERDY) == 0u)	// wait 6 cycles to HSE to stabilise
+	{
 
-void ledToggle(void)
-{
-    GPIOC -> ODR ^= GPIO_ODR_6;
-}
+	}
 
-void myDelay(void)
-{
-    for(i = 0; i<200000; i++)
-    {
+    /*FLASH*/
+	FLASH->ACR|= FLASH_ACR_PRFTBE;			// enabling FLASH prefatch buffer
+	FLASH->ACR &= ~FLASH_ACR_LATENCY;		// set all bits to 0 (to ensure)
+	FLASH->ACR|= FLASH_ACR_LATENCY_2;		// Two wait sates, if 48 < HCLK ≤ 72 MHz
+	/*FLASH*/
 
-    }
-}
+	RCC->CFGR |= RCC_CFGR_PPRE1_2;          // APB1 div 2
+    RCC->CFGR |= RCC_CFGR_PLLMUL9;  		// multiplicator 9 , input 8*9=72MHz
+	RCC->CFGR |= RCC_CFGR_PLLSRC;   		// PLL entry clock source, external selected as PLL input clock
 
-void buttonPin(void)
-{
-    // PC9 as an input button, pull-up tha will be grounded by external button
-    // no need to start RCC for AHBENR as it is already strated
-    // begin with MODER = 00 for Input
-    GPIOC -> PUPDR |= GPIO_PUPDR_PUPDR9_0; // pull -up mode
-    //GPIOC -> PUPDR |= GPIO_PUPDR_PUPDR9_1; // pull -down mode
-}
-void ledBright(void)
-{
-    GPIOC -> ODR |= GPIO_ODR_6;
-}
+	RCC->CR	  |= RCC_CR_PLLON; 				// start the PLL
+	while((RCC->CR & RCC_CR_PLLRDY) == 0u)	// wait for PLL is ready
+	{
 
-void ledDark(void)
-{
-    GPIOC -> ODR = ~GPIO_ODR_6; // bad solution
+	}
+	
+	RCC->CFGR &= ~RCC_CFGR_SW; 				// System clock switch to external
+	RCC->CFGR |= RCC_CFGR_SW_PLL; 			// select PLL as system clock
+	
+    
+    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) { } // wait for switch status
+
+    // __asm volatile("DSB": : :"memory");
+    // for(; ;)
+    // {
+    //     const uint32_t sws = RCC->CFGR & RCC_CFGR_SWS;
+    //     __asm volatile("DSB": : :"memory");
+    //     if(sws == RCC_CFGR_SWS_PLL)
+    //     {
+    //         break;
+    //     }
+
+    // }
+
+
 }
